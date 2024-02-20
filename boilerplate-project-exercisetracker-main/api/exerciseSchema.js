@@ -13,7 +13,7 @@ const exerciseSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    date: String,
+    date: Date,
 })
 
 const Exercise = mongoose.model('exercise', exerciseSchema)

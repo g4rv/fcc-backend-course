@@ -30,6 +30,16 @@ app.get('/api/users/:id', async (req, res) => {
 	}
 });
 
+app.get('/api/users', async (req, res) => {
+	try {
+		const allUsers = await User.find();
+		if (allUsers) return res.json(allUsers);
+		else throw new Error('No users yet!');
+	} catch (err) {
+		res.json({ error: err });
+	}
+});
+
 app.post('/api/users', async (req, res) => {
 	const { username } = req.body;
 	try {
@@ -57,13 +67,14 @@ app.post('/api/users/:id/exercises', async (req, res) => {
 				duration,
 				date: !date ? new Date().toDateString() : new Date(date).toDateString(),
 			}).save();
-			if (newExercise) return res.json({
-                _id: existingUser._id,
-                username: newExercise.username,
-				description: newExercise.description,
-				duration: newExercise.duration,
-				date: newExercise.date,
-            });
+			if (newExercise)
+				return res.json({
+					_id: existingUser._id,
+					username: newExercise.username,
+					description: newExercise.description,
+					duration: newExercise.duration,
+					date: newExercise.date.toDateString(),
+				});
 		} else throw new Error('No such user!');
 	} catch (err) {
 		res.json({ error: err.message });
@@ -72,24 +83,36 @@ app.post('/api/users/:id/exercises', async (req, res) => {
 
 app.get('/api/users/:id/logs', async (req, res) => {
 	const { id } = req.params;
+	const { from, to, limit } = req.query;
+
 	try {
 		const existingUser = await User.findOne({ _id: id });
 		if (existingUser) {
-			const userExercises = await Exercise.find({
-				username: existingUser.username,
-			});
+			let query = { username: existingUser.username };
+			if (from || to) {
+				query.date = {};
+				if (from) {
+					query.date.$gte = from;
+				}
+				if (to) {
+					query.date.$lte = to;
+				}
+			}
+            console.log(query)
+			const userExercises = await Exercise.find(query)
+				.limit(Number(limit));
 
 			res.json({
 				username: existingUser.username,
 				count: userExercises.length,
 				_id: existingUser._id,
-				log: userExercises.map((exercise) => {
-					return {
-						description: exercise.description,
-						duration: exercise.duration,
-						date: exercise.date,
-					};
-				}),
+				log: userExercises.map(exercise => {
+                    return {
+                        description: exercise.description, 
+                        duration: exercise.duration, 
+                        date: exercise.date.toDateString()
+                    }
+                }),
 			});
 		} else throw new Error('No such user!');
 	} catch (err) {
