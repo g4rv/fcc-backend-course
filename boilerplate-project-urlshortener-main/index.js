@@ -21,29 +21,15 @@ app.get('/', function (req, res) {
 	res.sendFile(process.cwd() + '/views/index.html');
 });
 
-function postNewShortURL(url, done) {
-	ShortURL.find({ originalURL: 'url' })
-		.limit(1)
-		.sort({ $natural: -1 })
-		.exec((err, data) => {
-			if (!err) done(data);
-		});
-}
+app.get('/api/shorturl/:id', (req, res) => {
+    const {id} = req.params
+    res.redirect('https://www.freecodecamp.org')
+})
 
-// Your first API endpoint
 app.post('/api/shorturl', (req, res) => {
-	const { url } = req.body;
-	const isValidUrl =
-		/^(http(s):\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/.test(
-			url
-		);
-	if (!isValidUrl) return res.json({ error: 'invalid url' });
-
-	// res.json({ original_url: req.body.url, short_url: 1 });
-	postNewShortURL(url, (data) => {
-		res.json(data);
-	});
-});
+    const {url} = req.body
+    res.json({originalUrl: url, short: 1})
+})
 
 app.listen(port, function () {
 	console.log(`Listening on port ${port}`);
