@@ -21,13 +21,27 @@ app.get('/', function (req, res) {
 // your first API endpoint...
 app.get('/api/:time', (req, res) => {
 	const {time} = req.params
-    const isUnix = /-/.test(time) ? time : Number(time)
+    const isUnix = /\D/.test(time) ? time : Number(time)
     const formatTime = new Date(isUnix);
+    if(isNaN(formatTime.getTime())) {
+        res.json({
+            "error": formatTime.toString()
+        })
+        return
+    }
 	res.json({
 		unix: formatTime.getTime(),
-		utc: formatTime.toString()
+		utc: formatTime.toGMTString()
 	});
 });
+
+app.get('/api', (req, res) => {
+    const currTime = new Date()
+    res.json({
+		unix: currTime.getTime(),
+		utc: currTime.toGMTString()
+	})
+})
 
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
